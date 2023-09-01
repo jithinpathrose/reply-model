@@ -2,5 +2,5 @@
 
 Access http://localhost:9091/response/out
 
-User : user
-Password : <printed in console>
+<p>User : user 
+<p>Password : printed in console
