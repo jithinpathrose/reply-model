@@ -1,5 +1,6 @@
 package com.reply.model.engine;
 
+import com.reply.model.engine.iemotion.Brain;
 import com.reply.model.model.Conversation;
 import com.reply.model.repo.ConversationRepo;
 import lombok.var;
@@ -19,23 +20,24 @@ public class ReplyModel {
     @Autowired
     private Clock clock;
 
+    @Autowired
+    private Brain brain;
+
     public String think(ConversationRepo conversationRepo) {
         var result = thought(defaultThink, conversationRepo);
+
+        StringBuilder stringBuilder = new StringBuilder();
+        conversationRepo.findAll().stream().forEach(conv-> {stringBuilder.append(conv.asString());});
+        stringBuilder.append(result.asString());
         conversationRepo.save(result);
-        return result.toString();
+        return stringBuilder.toString();
     }
 
     private Conversation thought(String defaultThink, ConversationRepo conversationRepo) {
-
-        return new Conversation(LocalDateTime.now(clock).toString(), prepareConv(defaultThink, conversationRepo));
+        return new Conversation(LocalDateTime.now(clock).toString(), prepareConv(defaultThink, conversationRepo), null);
     }
 
     private String prepareConv(String defaultThink, ConversationRepo conversationRepo) {
-        return conversationRepo.findAll().stream().findFirst().isPresent()?conversationRepo.findAll().stream().map(Conversation::getConversationText).collect(Collectors.toList()).stream()
-                .reduce("", (accum, current) -> callBrain(defaultThink, accum, current)):defaultThink;
-    }
-
-    private static String callBrain(String defaultThink, String accum, String current) {
-        return accum + " " + current.substring(0, defaultThink.length());
+        return brain.act(defaultThink, conversationRepo);
     }
 }
